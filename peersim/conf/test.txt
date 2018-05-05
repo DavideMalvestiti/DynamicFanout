@@ -1,0 +1,43 @@
+# network size
+SIZE 10
+
+# parameters of periodic execution
+
+
+
+random.seed 1234567890
+network.size SIZE
+simulation.endtime 100000
+simulation.cycle 1000
+
+################### protocols ===========================
+
+protocol.link IdleProtocol
+protocol.coord example.rgg.RGGCoordinates
+protocol.tr peersim.transport.E2ETransport
+
+protocol.ble example.rgg.BLEManager
+protocol.ble.linkable link
+protocol.ble.step 1000
+protocol.ble.transport tr
+
+
+################### initialization ======================
+
+init.0 example.rgg.RGGInitializer
+init.0.protocol coord
+init.0.density 0.0005
+
+init.1 example.rgg.WireRGGTopology
+init.1.protocol link 
+init.1.coord_protocol coord
+init.1.radius 50
+
+
+init.sch CDScheduler
+init.sch.protocol ble
+
+
+################ control ==============================
+
+include.init 0 1 sch
