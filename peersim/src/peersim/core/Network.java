@@ -85,7 +85,6 @@ private static final String PAR_SIZE = "network.size";
 * {@link #size()} items of the array.
 */
 static Node[] node = null;
-static BLENode[] blenode = null;
 
 /**
 * Actual size of the network.
@@ -124,7 +123,6 @@ public static void reset() {
 			PAR_MAXSIZE+" is less than "+PAR_SIZE);
 
 	node = new Node[maxlen];
-	blenode = new BLENode[maxlen];
 	
 	// creating prototype node
 	Node tmp = null;
@@ -148,7 +146,6 @@ public static void reset() {
 		{
 			node[i] = (Node)prototype.clone();
 			node[i].setIndex(i);
-			blenode[i] = new BLENode(node[i]);
 		}
 	}
 }
@@ -219,13 +216,6 @@ public static Node get( int index ) {
 	
 	return node[index];
 }
-
-public static BLENode getble( long id ) {
-	
-	return blenode[(int) id];
-}
-
-
 
 // ------------------------------------------------------------------
 

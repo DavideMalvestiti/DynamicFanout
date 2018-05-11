@@ -3,6 +3,9 @@ package example.rgg;
 import peersim.config.*;
 import peersim.core.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import peersim.cdsim.CDProtocol;
 import peersim.edsim.EDProtocol;
 import peersim.edsim.EDSimulator;
@@ -14,14 +17,17 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
     // ------------------------------------------------------------------------
 	
 	/* 0 Standby
-	 * 1 Advertising
-	 * 2 Connection
-	 * 3 Initiating
-	 * 4 Scanning
+	 * 1 Scanning
+	 * 2 Initiating
+	 * 3 Advertising
+	 * 4 Connection
 	 */
-	//private int BLEstatus;
+	public int bleState = 0;
+	//public int battery;
 	public boolean busy = false;
 	private int mss = 0;
+	
+	private Map<String, String> messages;  // idmsg -> msg
 	
 	
 	//--------------------------------------------------------------------------
@@ -48,10 +54,7 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 		}
 		catch(CloneNotSupportedException e){};
 		
-		
-		
-		
-		
+		((BLEManager)blem).messages = new HashMap<String, String>();
 		
 		return blem;
 	}
@@ -69,32 +72,26 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 	 */
 	public void nextCycle( Node node, int pid ) {
 		
+		if (bleState != 4){
+			bleState = 1;
+		}
+		
 		
 		if (mss == 0) {
 		
-		
 		/* non va generato qua */ String newid = NewMSG.newIdmsg(node);
-		Network.getble(node.getID()).getMessages().put( newid, NewMSG.newMsg(node) );
+		messages.put( newid, NewMSG.newMsg(node) );
 		
 		//m.msg.substring(0, 1);
 		
 		
-		//System.out.println( node.getID() + " new " + Network.getble(node.getID()).getMessages().keySet() );
+		//System.out.println( node.getID() + " new " + messages.keySet() );
 		mss++;
 		
 		
+		bleState = 3;
 		this.doAdvertising(newid, node, pid);
 		}
-		
-		
-		/*
-		for ( Map.Entry<String, String> entry : Network.getble(node.getID()).getMessages().entrySet() ){
-			
-			
-			this.doAdvertising(entry.getKey(), node, pid);
-			
-		}
-		*/
 		
 		
 	}
@@ -109,16 +106,13 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 		if (event.getClass() == AdvertisingMessage.class) {
 			AdvertisingMessage adv = (AdvertisingMessage)event;
 			
-			if ( ( adv.response == 0 ) 
-					&& !Network.getble(node.getID()).getMessages().containsKey( adv.idmsg )
-					&& !busy ){
-				
+			if ( !messages.containsKey( adv.idmsg )  &&  !busy ){
 				
 				
 				//System.out.println( node.getID() + "  y  " + adv.idmsg );
 				
 				
-				
+				bleState = 2;
 				this.respAdvertising( 
 						node, 
 						adv.sender, 
@@ -126,13 +120,12 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 						pid);
 				
 				
-				// task scheduled
-				Network.getble(node.getID()).getMsgRequest().put( adv.idmsg, adv.sender );
-				
-				
-				
-			} if ( adv.response == 1 
-					&& !busy ){
+			}
+			
+		} else if (event.getClass() == ConnectionRequest.class) {
+			ConnectionRequest req = (ConnectionRequest)event;
+			
+			if ( !busy ){
 				
 				
 				
@@ -141,13 +134,15 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 				
 				
 				this.busy = true;
-				((BLEManager)adv.sender.getProtocol(pid)).busy = true;
+				((BLEManager)req.sender.getProtocol(pid)).busy = true;
+				bleState = 4;
+				((BLEManager)req.sender.getProtocol(pid)).bleState = 4;
 				
 				
 				EDSimulator.add(
 						500,
-						new ConnectionMessage( adv.idmsg, node, Network.getble(node.getID()).getMessages().get( adv.idmsg ) ),
-						adv.sender,
+						new ConnectionMessage( req.idmsg, node, messages.get( req.idmsg ) ),
+						req.sender,
 						pid);
 				
 				
@@ -160,15 +155,10 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 				
 			}
 			
-			
-			
 		} else if (event.getClass() == ConnectionMessage.class) {
 			ConnectionMessage con = (ConnectionMessage)event;
 			
-			// task canceled
-			Network.getble(node.getID()).getMsgRequest().remove( con.idmsg );
-			
-			Network.getble(node.getID()).getMessages().put( con.idmsg, con.msg );
+			messages.put( con.idmsg, con.msg );
 			
 			
 			
@@ -176,13 +166,15 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 			
 			
 			this.busy = false;
+			bleState = 0;
 			
 			
-			
+			bleState = 3;
 			this.doAdvertising(con.idmsg, node, pid);
 			
 		} else if (event.getClass() == Unlock.class) {
 			this.busy = false;
+			bleState = 0;
 		}
 	
 	}
@@ -200,7 +192,7 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 			
 			EDSimulator.add(
 					0,
-					new AdvertisingMessage( idmsg, node, 0 ),
+					new AdvertisingMessage( idmsg, node ),
 					peern,
 					pid);
 			
@@ -214,7 +206,7 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 		
 		EDSimulator.add(
 				0,
-				new AdvertisingMessage( idmsg, src, 1 ),
+				new ConnectionRequest( idmsg, src ),
 				dest,
 				pid);
 		
@@ -232,12 +224,26 @@ class AdvertisingMessage {
 	
 	final String idmsg;
 	final Node sender;
-	final int response;
 	
-	public AdvertisingMessage( String idmsg, Node sender, int response ) {
+	public AdvertisingMessage( String idmsg, Node sender ) {
 		this.idmsg = idmsg;
 		this.sender = sender;
-		this.response = response;
+	}
+}
+
+
+/**
+* The type of a connectionrequest. It contains an idmsg 
+* of type String and the sender node of type {@link peersim.core.Node}.
+*/
+class ConnectionRequest {
+	
+	final String idmsg;
+	final Node sender;
+	
+	public ConnectionRequest( String idmsg, Node sender ) {
+		this.idmsg = idmsg;
+		this.sender = sender;
 	}
 }
 
