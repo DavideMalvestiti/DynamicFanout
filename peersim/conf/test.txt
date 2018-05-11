@@ -7,8 +7,7 @@ SIZE 10
 
 random.seed 1234567890
 network.size SIZE
-simulation.endtime 100000
-simulation.cycle 1000
+simulation.endtime 101000
 
 ################### protocols ===========================
 

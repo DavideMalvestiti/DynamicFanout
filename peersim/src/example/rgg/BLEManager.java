@@ -1,19 +1,14 @@
 package example.rgg;
 
-import peersim.vector.SingleValueHolder;
 import peersim.config.*;
 import peersim.core.*;
-import peersim.transport.Transport;
-
-import java.util.Map;
 
 import peersim.cdsim.CDProtocol;
 import peersim.edsim.EDProtocol;
 import peersim.edsim.EDSimulator;
 
 
-public class BLEManager extends SingleValueHolder
-implements CDProtocol, EDProtocol {
+public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 	// ------------------------------------------------------------------------
     // Fields
     // ------------------------------------------------------------------------
@@ -25,9 +20,9 @@ implements CDProtocol, EDProtocol {
 	 * 4 Scanning
 	 */
 	//private int BLEstatus;
+	public boolean busy = false;
+	private int mss = 0;
 	
-	
-	private int mess = 0;
 	
 	//--------------------------------------------------------------------------
 	// Initialization
@@ -36,16 +31,36 @@ implements CDProtocol, EDProtocol {
 	/**
 	 * @param prefix string prefix for config properties
 	 */
-	public BLEManager(String prefix) { 
-		super(prefix); 
-		//BLEstatus = 1;
+	public BLEManager(String prefix) {
 		
+	}
+	
+	
+	/**
+	 *	Clone method of the class. Returns a deep copy of the BLEManager class. Used
+	 *	by the simulation to initialize the {@link peersim.core.Network}
+	 *	@return the deep copy of the BLEManager class.
+	 */
+	public Object clone(){
+		Object blem = null;
+		try{
+			blem = (BLEManager)super.clone();
+		}
+		catch(CloneNotSupportedException e){};
+		
+		
+		
+		
+		
+		
+		return blem;
 	}
 	
 	
 	//--------------------------------------------------------------------------
 	// methods
 	//--------------------------------------------------------------------------
+	
 	
 	/**
 	 * This is the standard method the define periodic activity.
@@ -55,39 +70,33 @@ implements CDProtocol, EDProtocol {
 	public void nextCycle( Node node, int pid ) {
 		
 		
-		if ( !Network.getble(node.getID()).isBusy() ){
-			
-			
-			
-			this.doAdvertising(node, pid);
-			
+		if (mss == 0) {
 		
 		
+		/* non va generato qua */ String newid = NewMSG.newIdmsg(node);
+		Network.getble(node.getID()).getMessages().put( newid, NewMSG.newMsg(node) );
 		
-		if ( !Network.getble(node.getID()).getMsgRequest().keySet().isEmpty() ) {
-		System.out.println( node.getID() + "  miss  " + Network.getble(node.getID()).getMsgRequest().keySet() );
+		//m.msg.substring(0, 1);
+		
+		
+		//System.out.println( node.getID() + " new " + Network.getble(node.getID()).getMessages().keySet() );
+		mss++;
+		
+		
+		this.doAdvertising(newid, node, pid);
 		}
 		
 		
-		
-		// uno alla volta 
-		for ( Map.Entry<String, Node> entry : Network.getble(node.getID()).getMsgRequest().entrySet() ){
+		/*
+		for ( Map.Entry<String, String> entry : Network.getble(node.getID()).getMessages().entrySet() ){
 			
 			
-			this.respAdvertising( 
-					node, 
-					entry.getValue(), 
-					entry.getKey(), 
-					pid);
+			this.doAdvertising(entry.getKey(), node, pid);
 			
 		}
+		*/
 		
 		
-		
-		}
-		
-		
-	
 	}
 	
 	
@@ -96,23 +105,17 @@ implements CDProtocol, EDProtocol {
 	 */
 	public void processEvent( Node node, int pid, Object event ) {
 		
-		//Linkable linkable = (Linkable) node.getProtocol( FastConfig.getLinkable(pid) );
-        //Transport transport = (Transport) node.getProtocol( FastConfig.getTransport(pid) );
 		
-        
 		if (event.getClass() == AdvertisingMessage.class) {
 			AdvertisingMessage adv = (AdvertisingMessage)event;
 			
-			
-			
 			if ( ( adv.response == 0 ) 
 					&& !Network.getble(node.getID()).getMessages().containsKey( adv.idmsg )
-					&& !Network.getble(node.getID()).isBusy() ){
+					&& !busy ){
 				
 				
-				// ()
-				Network.getble(node.getID()).setBusy(true);
-				System.out.println( node.getID() + "  y  " + adv.idmsg );
+				
+				//System.out.println( node.getID() + "  y  " + adv.idmsg );
 				
 				
 				
@@ -126,12 +129,10 @@ implements CDProtocol, EDProtocol {
 				// task scheduled
 				Network.getble(node.getID()).getMsgRequest().put( adv.idmsg, adv.sender );
 				
-				// ()
-				Network.getble(node.getID()).setBusy(false);
 				
 				
 			} if ( adv.response == 1 
-					&& !Network.getble(node.getID()).isBusy() ){
+					&& !busy ){
 				
 				
 				
@@ -139,19 +140,22 @@ implements CDProtocol, EDProtocol {
 				
 				
 				
-				Network.getble(node.getID()).setBusy(true);
-				Network.getble(adv.sender.getID()).setBusy(true);
+				this.busy = true;
+				((BLEManager)adv.sender.getProtocol(pid)).busy = true;
 				
 				
 				EDSimulator.add(
-						1000,
+						500,
 						new ConnectionMessage( adv.idmsg, node, Network.getble(node.getID()).getMessages().get( adv.idmsg ) ),
 						adv.sender,
 						pid);
 				
 				
-				// stallo 1000
-				Network.getble(node.getID()).setBusy(false);
+				EDSimulator.add(
+						500,
+						new Unlock(),
+						node,
+						pid);
 				
 				
 			}
@@ -167,57 +171,38 @@ implements CDProtocol, EDProtocol {
 			Network.getble(node.getID()).getMessages().put( con.idmsg, con.msg );
 			
 			
+			
 			System.out.println( node.getID() + " ho ricevuto messaggio " + con.idmsg );
-			System.out.println( node.getID() + "  updatemiss  " + Network.getble(node.getID()).getMsgRequest().keySet() );
 			
 			
-			Network.getble(node.getID()).setBusy(false);
+			this.busy = false;
 			
 			
-			this.doAdvertising(node, pid);
+			
+			this.doAdvertising(con.idmsg, node, pid);
+			
+		} else if (event.getClass() == Unlock.class) {
+			this.busy = false;
 		}
 	
 	}
 	
 	
-	private void doAdvertising(Node node, int pid) {
-		Linkable linkable = (Linkable) node.getProtocol( FastConfig.getLinkable(pid) );
-		Transport transport = (Transport) node.getProtocol( FastConfig.getTransport(pid) );
+	private void doAdvertising(String idmsg, Node node, int pid) {
 		
-		if (linkable.degree() > 0) {
+		Linkable linkable = (Linkable) node.getProtocol( FastConfig.getLinkable(pid) );
+		
+		// per ogni Neighbor con stato Scanning o Initiating
+		for (int i = 0; i < linkable.degree(); i++) {
 			
 			
-			// per ogni Neighbor con stato Scanning (4)
-			Node peern = linkable.getNeighbor(
-					CommonState.r.nextInt(linkable.degree()));
+			Node peern = linkable.getNeighbor(i);
 			
-			
-			
-			
-			if (  mess < 1 ){
-			
-			
-			/* non va generato qua */ String newid = null; newid = NewMSG.newIdmsg(node);
-			Network.getble(node.getID()).getMessages().put( newid, NewMSG.newMsg(node) );
-			
-			//m.msg.substring(0, 1);
-			
-			
-			
-			System.out.println( node.getID() + " new " + Network.getble(node.getID()).getMessages().keySet() );
-			
-			
-			mess++;
-			//}
-			
-			
-			transport.send(
-					node,
+			EDSimulator.add(
+					0,
+					new AdvertisingMessage( idmsg, node, 0 ),
 					peern,
-					new AdvertisingMessage( newid, node, 0 ),
 					pid);
-			}
-			
 			
 			
 		}
@@ -227,14 +212,12 @@ implements CDProtocol, EDProtocol {
 	
 	private void respAdvertising(Node src, Node dest, String idmsg, int pid) {
 		
-		
-		Transport transport = (Transport) src.getProtocol( FastConfig.getTransport(pid) );
-    	
-    	transport.send(
-				src,
-				dest,
+		EDSimulator.add(
+				0,
 				new AdvertisingMessage( idmsg, src, 1 ),
+				dest,
 				pid);
+		
 		
 	}
 
@@ -274,4 +257,9 @@ class ConnectionMessage {
 		this.sender = sender;
 		this.msg = msg;
 	}
+}
+
+
+class Unlock {
+	
 }

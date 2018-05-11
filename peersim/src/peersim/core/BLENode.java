@@ -9,7 +9,7 @@ public class BLENode {
 	private int battery;
 	private Map<String, String> messages;  // idmsg -> msg
 	private Map<String, Node> msgRequest;  // idmsg -> dest
-	private boolean busy;
+	
 	
 	
 	public BLENode (Node node)
@@ -18,7 +18,7 @@ public class BLENode {
 		this.battery = 100;
 		this.messages = new HashMap<String, String>();
 		this.msgRequest = new HashMap<String, Node>();
-		this.setBusy(false);
+		
 	}
 
 	
@@ -58,19 +58,4 @@ public class BLENode {
 		return msgRequest;
 	}
 
-
-	/**
-	 * @return if busy or not
-	 */
-	public boolean isBusy() {
-		return busy;
-	}
-
-
-	/**
-	 * @param set if busy or not
-	 */
-	public void setBusy(boolean busy) {
-		this.busy = busy;
-	}
 }
