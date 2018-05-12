@@ -23,8 +23,11 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 	 * 4 Connection
 	 */
 	public int bleState = 0;
-	//public int battery;
+	//public double battery;
 	public boolean busy = false;
+	//private int dynamicFanout = 0;
+	//private int advertiseLimit = 0;
+	
 	private int mss = 0;
 	
 	private Map<String, String> messages;  // idmsg -> msg
@@ -106,10 +109,11 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 		if (event.getClass() == AdvertisingMessage.class) {
 			AdvertisingMessage adv = (AdvertisingMessage)event;
 			
+			// bleState != 3
 			if ( !messages.containsKey( adv.idmsg )  &&  !busy ){
 				
 				
-				//System.out.println( node.getID() + "  y  " + adv.idmsg );
+				System.out.println( node.getID() + "  y  " + adv.idmsg );
 				
 				
 				bleState = 2;
@@ -125,6 +129,7 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 		} else if (event.getClass() == ConnectionRequest.class) {
 			ConnectionRequest req = (ConnectionRequest)event;
 			
+			// bleState == 3
 			if ( !busy ){
 				
 				
@@ -180,13 +185,10 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 	}
 	
 	
-	private void doAdvertising(String idmsg, Node node, int pid) {
-		
+	private void doAdvertising( String idmsg, Node node, int pid ) {
 		Linkable linkable = (Linkable) node.getProtocol( FastConfig.getLinkable(pid) );
 		
-		// per ogni Neighbor con stato Scanning o Initiating
 		for (int i = 0; i < linkable.degree(); i++) {
-			
 			
 			Node peern = linkable.getNeighbor(i);
 			
@@ -202,7 +204,7 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 	}
 	
 	
-	private void respAdvertising(Node src, Node dest, String idmsg, int pid) {
+	private void respAdvertising( Node src, Node dest, String idmsg, int pid ) {
 		
 		EDSimulator.add(
 				0,
