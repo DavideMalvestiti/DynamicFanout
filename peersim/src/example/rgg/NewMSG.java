@@ -18,7 +18,7 @@ public class NewMSG {
 	public static String newMsg(Node author){
 		
 		// 10^x Kbyte
-		int sizemsg = 2;
+		int sizemsg = 3;
 		
 		return String.valueOf( sizemsg ) + Long.toHexString(Double.doubleToLongBits(Math.random())) ;
 	}

@@ -129,7 +129,7 @@ public class InetObserver extends GraphObserver {
      *            coordinate protocol identifier.
      */
     private static void graphToFile(Graph g, PrintStream ps, int coordPid) {
-        for (int i = 1; i < g.size(); i++) {
+        for (int i = 0; i < g.size(); i++) {
             Node current = (Node) g.getNode(i);
             double x_to = ((RGGCoordinates) current
                     .getProtocol(coordPid)).getX();

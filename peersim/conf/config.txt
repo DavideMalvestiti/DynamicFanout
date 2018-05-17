@@ -1,30 +1,37 @@
 random.seed 1234567890
 
-simulation.cycles 1
-
-network.size 20
+simulation.endtime 55000
+network.size 10
 
 protocol.link IdleProtocol
 protocol.coord example.rgg.RGGCoordinates
+protocol.tr peersim.transport.E2ETransport
 
 init.0 example.rgg.RGGInitializer
 init.0.protocol coord
 init.0.density 0.0005
 
 init.1 example.rgg.WireRGGTopology
+init.1.undir
 init.1.protocol link 
 init.1.coord_protocol coord
 init.1.radius 50
 
-control.io example.rgg.InetObserver
-control.io.protocol link
-control.io.coord_protocol coord
-control.io.file_base graph
 
-control.degree DegreeStats
-control.degree.protocol link
-control.degree.undir
-control.degree.method freq
 
-include.init 0 1
-include.control io degree
+protocol.ble example.rgg.BLEManager
+protocol.ble.linkable link
+protocol.ble.step 30000
+protocol.ble.transport tr
+
+control.st example.rgg.BLEStamp
+control.st.protocol link
+control.st.coord_protocol coord
+control.st.pid ble
+control.st.step 5000
+
+init.sch CDScheduler
+init.sch.protocol ble
+
+include.init 0 1 sch
+include.control st
