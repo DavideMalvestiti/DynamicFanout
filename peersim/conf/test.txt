@@ -5,7 +5,7 @@ SIZE 10
 
 random.seed 1234567890
 network.size SIZE
-simulation.endtime 105000
+simulation.endtime 65000
 
 ################### protocols ===========================
 
@@ -17,7 +17,6 @@ protocol.ble example.rgg.BLEManager
 protocol.ble.linkable link
 protocol.ble.step 30000
 protocol.ble.transport tr
-
 
 ################### initialization ======================
 
@@ -31,16 +30,17 @@ init.1.protocol link
 init.1.coord_protocol coord
 init.1.radius 50
 
-
 init.sch CDScheduler
 init.sch.protocol ble
 
-
 ################ control ==============================
 
-control.0 example.rgg.BLEObserver
-control.0.protocol ble
-control.0.step 5000
+control.start example.rgg.GenerateMessage
+control.start.protocol ble
+control.start.node 1
+control.start.size 3
+control.start.at 5
 
-
-include.init 0 1 sch
+control.obs example.rgg.BLEObserver
+control.obs.protocol ble
+control.obs.step 5000

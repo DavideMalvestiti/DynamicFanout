@@ -1,11 +1,23 @@
-random.seed 1234567890
+# network size
+SIZE 10
 
-simulation.endtime 55000
-network.size 10
+
+random.seed 1234567890
+network.size SIZE
+simulation.endtime 65000
+
+################### protocols ===========================
 
 protocol.link IdleProtocol
 protocol.coord example.rgg.RGGCoordinates
 protocol.tr peersim.transport.E2ETransport
+
+protocol.ble example.rgg.BLEManager
+protocol.ble.linkable link
+protocol.ble.step 30000
+protocol.ble.transport tr
+
+################### initialization ======================
 
 init.0 example.rgg.RGGInitializer
 init.0.protocol coord
@@ -17,21 +29,19 @@ init.1.protocol link
 init.1.coord_protocol coord
 init.1.radius 50
 
+init.sch CDScheduler
+init.sch.protocol ble
 
+################ control ==============================
 
-protocol.ble example.rgg.BLEManager
-protocol.ble.linkable link
-protocol.ble.step 30000
-protocol.ble.transport tr
+control.bs example.rgg.InetObserver
+control.bs.protocol link
+control.bs.coord_protocol coord
+control.bs.file_base base
+control.bs.at 5
 
 control.st example.rgg.BLEStamp
 control.st.protocol link
 control.st.coord_protocol coord
 control.st.pid ble
 control.st.step 5000
-
-init.sch CDScheduler
-init.sch.protocol ble
-
-include.init 0 1 sch
-include.control st

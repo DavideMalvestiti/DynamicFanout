@@ -10,7 +10,7 @@ public class BLEObserver implements Control {
 	// ------------------------------------------------------------------------
 
 	/**
-	 * The coordinate protocol to look at.
+	 * The protocol to look at.
      * 
      * @config
      */
@@ -49,10 +49,10 @@ public class BLEObserver implements Control {
 		
 		for (int j = 0; j < Network.size(); j++){
 			
-			BLEManager blem = (BLEManager) Network.get(j).getProtocol(pid);
+			BLE blem = (BLE) Network.get(j).getProtocol(pid);
 			
 			
-			System.out.print( "  node" + Network.get(j).getID() + "->" + blem.bleState );
+			System.out.print( "  node" + Network.get(j).getID() + "->" + blem.getbleState() );
 		}
 		
 		System.out.println(" ");

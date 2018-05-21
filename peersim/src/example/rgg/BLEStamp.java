@@ -30,7 +30,7 @@ public class BLEStamp extends GraphObserver {
     private static final String PAR_COORDINATES_PROT = "coord_protocol";
     
     /**
-	 * The coordinate protocol to look at.
+	 * The protocol to look at.
      * 
      * @config
      */
@@ -129,8 +129,8 @@ public class BLEStamp extends GraphObserver {
             double y_to = ((RGGCoordinates) current
                     .getProtocol(coordPid)).getY();
             
-            int bleState = ((BLEManager) current
-            		.getProtocol(pid)).bleState;
+            int bleState = ((BLE) current
+            		.getProtocol(pid)).getbleState();
             
             ps.println(x_to + " " + y_to + " " + bleState);
             ps.println();
@@ -147,7 +147,7 @@ public class BLEStamp extends GraphObserver {
             double y_to = ((RGGCoordinates) current
                     .getProtocol(coordPid)).getY();
             
-            Node receiver = ((BLEManager) current
+            Node receiver = ((BLE) current
             		.getProtocol(pid)).getReceiver();
             
             if (receiver != null){

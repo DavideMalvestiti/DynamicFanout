@@ -11,7 +11,7 @@ import peersim.edsim.EDProtocol;
 import peersim.edsim.EDSimulator;
 
 
-public class BLEManager implements CDProtocol, EDProtocol, Protocol {
+public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 	// ------------------------------------------------------------------------
     // Fields
     // ------------------------------------------------------------------------
@@ -22,13 +22,12 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 	 * 3 Advertising
 	 * 4 Connection
 	 */
-	public int bleState = 0;
+	private int bleState = 0;
+	private boolean busy = false;
+	
 	private double battery = 100.00;
-	public boolean busy = false;
 	private int dynamicFanout = 0;
 	private int advertiseLimit = 0;
-	
-	private int mss = 0;
 	
 	private Map<String, String> messages;  // idmsg -> msg
 	private int timervalid;
@@ -77,26 +76,9 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 	 */
 	public void nextCycle( Node node, int pid ) {
 		
+		
 		Linkable linkable = (Linkable) node.getProtocol( FastConfig.getLinkable(pid) );
 		this.periodicActions( linkable.degree() );
-		
-		//----------------------------------------------------------------------
-		
-		if (mss == 0 && node.getIndex() == 1) {
-		
-		
-		/* non va generato qua */ String newid = NewMSG.newIdmsg(node);
-		messages.put( newid, NewMSG.newMsg(node) );
-		
-		
-		mss++;
-		
-		
-		bleState = 3;
-		
-		this.doAdvertising(newid, node, pid);
-		
-		}
 	
 	}
 	
@@ -109,6 +91,7 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 		
 		if (event.getClass() == AdvertisingMessage.class) {
 			AdvertisingMessage adv = (AdvertisingMessage)event;
+			Cookie cookie = adv.cookie;
 			
 			if ( !messages.containsKey( adv.idmsg ) 
 					&& !busy 
@@ -116,10 +99,12 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 				
 				
 				bleState = 2;
-				this.respAdvertising( 
-						node, 
-						adv.sender, 
-						adv.idmsg, 
+				EDSimulator.add(
+						3,
+						new ConnectionRequest( adv.idmsg, 
+								node, 
+								new Cookie( cookie.dynamicFanout, cookie.advertiseLimit, cookie.tx, cookie.ae ) ),
+						adv.sender,
 						pid);
 				
 				
@@ -127,9 +112,16 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 			
 		} else if (event.getClass() == ConnectionRequest.class) {
 			ConnectionRequest rq = (ConnectionRequest)event;
+			Cookie cookie = rq.cookie;
 			
-			if ( !busy && bleState == 3 ){
+			if ( !busy 
+					&& bleState == 3
+					&& !((BLEManager)rq.sender.getProtocol(pid)).busy 
+					&& (cookie.tx < cookie.dynamicFanout) ){
 				
+				
+				// invalid timer
+				timervalid++;
 				
 				// lock nodes
 				this.busy = true;
@@ -153,7 +145,8 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 				
 				EDSimulator.add(
 						delay,
-						new Unlock(),
+						new Unlock( rq.idmsg, 
+								new Cookie( cookie.dynamicFanout, cookie.advertiseLimit, cookie.tx, cookie.ae ) ),
 						node,
 						pid);
 				
@@ -168,33 +161,48 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 				
 				messages.put( con.idmsg, con.msg );
 				
-				System.out.println( node.getID() + " ho ricevuto messaggio " + con.idmsg );
+				battery = battery - 3;
+				if (battery < 0) battery = 0;
 				
 				
 				// unlock node
 				this.busy = false;
 				
 				bleState = 3;
-				
-				this.doAdvertising(con.idmsg, node, pid);
+				this.sendMessages(con.idmsg, node, pid);
 			}
 			
 		} else if (event.getClass() == Unlock.class) {
+			Unlock unl = (Unlock)event;
+			Cookie cookie = unl.cookie;
+			
+			battery = battery - 3;
+			if (battery < 0) battery = 0;
 			
 			// unlock node
 			this.busy = false;
-			bleState = 1;
 			
 			receiver = -1;
+			
+			// ae = 0  tx++
+			EDSimulator.add(
+					0,
+					new TimerIdmsg( unl.idmsg, 
+							new Cookie( cookie.dynamicFanout, cookie.advertiseLimit, cookie.tx + 1, 0 ), 
+							timervalid ),
+					node,
+					pid);
+			
 			
 		} else if (event.getClass() == TimerIdmsg.class) {
 			TimerIdmsg tm = (TimerIdmsg)event;
 			Cookie cookie = tm.cookie;
 			
 			if ( tm.me == timervalid ){
-				if ( (cookie.ae < cookie.advertiseLimit)  &&  (cookie.tx < cookie.advertiseLimit)  ){
+				if ( (cookie.ae < cookie.advertiseLimit)  &&  (cookie.tx < cookie.dynamicFanout)  ){
 					
 					
+					// ae++
 					EDSimulator.add(
 							5000,
 							new TimerIdmsg( tm.idmsg, 
@@ -204,7 +212,10 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 							pid);
 					
 					bleState = 3;
-					this.doAdvertising(tm.idmsg, node, pid);
+					this.doAdvertising(tm.idmsg, 
+							node, 
+							pid,
+							new Cookie( cookie.dynamicFanout, cookie.advertiseLimit, cookie.tx, cookie.ae + 1 ) );
 					
 				} else {
 					
@@ -223,30 +234,30 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 	
 	private void periodicActions(int numNeighbors) {
 		
+		battery--;
+		if (battery < 0) battery = 0;
+		
 		if (!busy){
 			if ( battery > 20.00 ){
 				
-				if (bleState == 0){ bleState = 1; }
+				dynamicFanout = ParametersUpdate.updatedynamicFanout(numNeighbors, battery);
+				advertiseLimit = ParametersUpdate.updateadvertiseLimit(numNeighbors, battery);
+				if (bleState == 0) bleState = 1;
 				
 			} else {
 				
 				bleState = 0;
-				
 			}
 		}
-		
-		dynamicFanout = ParametersUpdate.updatedynamicFanout(numNeighbors, battery);
-		advertiseLimit = ParametersUpdate.updateadvertiseLimit(numNeighbors, battery);
-		// battery--
-		
+	
 	}
 	
 	
-	@SuppressWarnings("unused")
 	private void sendMessages( String idmsg, Node node, int pid ) {
 		
 		timervalid = 0;
 		
+		// ae = 0  tx = 0
 		EDSimulator.add(
 				0,
 				new TimerIdmsg( idmsg, 
@@ -259,16 +270,19 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 	}
 	
 	
-	private void doAdvertising( String idmsg, Node node, int pid ) {
+	private void doAdvertising( String idmsg, Node node, int pid, Cookie cookie ) {
 		Linkable linkable = (Linkable) node.getProtocol( FastConfig.getLinkable(pid) );
 		
-		for (int v = 0; v < linkable.degree(); v++) {
+		bleState = 3;
+		for (int i = 0; i < linkable.degree(); i++) {
 			
-			Node peern = linkable.getNeighbor(v);
+			Node peern = linkable.getNeighbor(i);
 			
 			EDSimulator.add(
 					3,
-					new AdvertisingMessage( idmsg, node ),
+					new AdvertisingMessage( idmsg, 
+							node,
+							new Cookie( cookie.dynamicFanout, cookie.advertiseLimit, cookie.tx, cookie.ae ) ),
 					peern,
 					pid);
 			
@@ -278,15 +292,21 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol {
 	}
 	
 	
-	private void respAdvertising( Node src, Node dest, String idmsg, int pid ) {
+	public void myNewmsg( String newid, String newmsg, Node node, int pid ) {
 		
-		EDSimulator.add(
-				3,
-				new ConnectionRequest( idmsg, src ),
-				dest,
-				pid);
+		messages.put( newid, newmsg );
 		
-		
+		// battery*
+		bleState = 3;
+		this.sendMessages(newid, node, pid);
+	}
+	
+	
+	/**
+	 * @return the bleState
+	 */
+	public int getbleState() {
+		return this.bleState;
 	}
 	
 	
@@ -311,10 +331,12 @@ class AdvertisingMessage {
 	
 	final String idmsg;
 	final Node sender;
+	final Cookie cookie;
 	
-	public AdvertisingMessage( String idmsg, Node sender ) {
+	public AdvertisingMessage( String idmsg, Node sender, Cookie cookie ) {
 		this.idmsg = idmsg;
 		this.sender = sender;
+		this.cookie = cookie;
 	}
 }
 
@@ -327,10 +349,12 @@ class ConnectionRequest {
 	
 	final String idmsg;
 	final Node sender;
+	final Cookie cookie;
 	
-	public ConnectionRequest( String idmsg, Node sender ) {
+	public ConnectionRequest( String idmsg, Node sender, Cookie cookie ) {
 		this.idmsg = idmsg;
 		this.sender = sender;
+		this.cookie = cookie;
 	}
 }
 
@@ -355,6 +379,13 @@ class ConnectionMessage {
 
 class Unlock {
 	
+	final String idmsg;
+	final Cookie cookie;
+	
+	public Unlock( String idmsg, Cookie cookie ) {
+		this.idmsg = idmsg;
+		this.cookie = cookie;
+	}
 }
 
 
