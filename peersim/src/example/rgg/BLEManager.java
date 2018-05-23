@@ -16,22 +16,24 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
     // Fields
     // ------------------------------------------------------------------------
 	
+	
 	/* 0 Standby
 	 * 1 Scanning
 	 * 2 Initiating
 	 * 3 Advertising
 	 * 4 Connection
+	 *   Slave -> Master
 	 */
-	private int bleState = 0;
-	private boolean busy = false;
+	protected int bleState = 0;
+	protected boolean busy = false;
 	
-	private double battery = 100.00;
-	private int dynamicFanout = 0;
-	private int advertiseLimit = 0;
+	protected double battery = 100.00;
+	protected int dynamicFanout = 0;
+	protected int advertiseLimit = 0;
 	
-	private Map<String, String> messages;  // idmsg -> msg
-	private int timervalid;
-	private int receiver = -1;
+	protected Map<String, String> messages;  // idmsg -> msg
+	protected int timervalid;
+	protected int receiver = -1;
 	
 	
 	//--------------------------------------------------------------------------
@@ -161,9 +163,9 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 				
 				messages.put( con.idmsg, con.msg );
 				
+				
 				battery = battery - 3;
 				if (battery < 0) battery = 0;
-				
 				
 				// unlock node
 				this.busy = false;
@@ -215,7 +217,7 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 					this.doAdvertising(tm.idmsg, 
 							node, 
 							pid,
-							new Cookie( cookie.dynamicFanout, cookie.advertiseLimit, cookie.tx, cookie.ae + 1 ) );
+							new Cookie( cookie.dynamicFanout, cookie.advertiseLimit, cookie.tx, cookie.ae ) );
 					
 				} else {
 					
@@ -232,7 +234,7 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 	}
 	
 	
-	private void periodicActions(int numNeighbors) {
+	protected void periodicActions(int numNeighbors) {
 		
 		battery--;
 		if (battery < 0) battery = 0;
@@ -253,7 +255,7 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 	}
 	
 	
-	private void sendMessages( String idmsg, Node node, int pid ) {
+	protected void sendMessages( String idmsg, Node node, int pid ) {
 		
 		timervalid = 0;
 		
@@ -270,10 +272,9 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 	}
 	
 	
-	private void doAdvertising( String idmsg, Node node, int pid, Cookie cookie ) {
+	protected void doAdvertising( String idmsg, Node node, int pid, Cookie cookie ) {
 		Linkable linkable = (Linkable) node.getProtocol( FastConfig.getLinkable(pid) );
 		
-		bleState = 3;
 		for (int i = 0; i < linkable.degree(); i++) {
 			
 			Node peern = linkable.getNeighbor(i);
