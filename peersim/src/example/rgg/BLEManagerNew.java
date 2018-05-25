@@ -60,7 +60,6 @@ public class BLEManagerNew extends BLEManager {
 		
 		for (int i = 0; i < priority.size(); i++) {
 			
-			
 			Node peern = priority.get(i);
 			
 			EDSimulator.add(
@@ -80,6 +79,7 @@ public class BLEManagerNew extends BLEManager {
 	protected void updatepriority( Node node, int pid ) {
 		Linkable linkable = (Linkable) node.getProtocol( FastConfig.getLinkable(pid) );
 		
+		priority.clear();
 		for (int i = 0; i < linkable.degree(); i++) {
 			
 			Node peern = linkable.getNeighbor(i);

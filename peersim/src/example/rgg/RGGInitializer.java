@@ -6,6 +6,7 @@ import peersim.core.Control;
 import peersim.core.Network;
 import peersim.core.Node;
 
+
 public class RGGInitializer implements Control {
     // ------------------------------------------------------------------------
     // Parameters
@@ -17,16 +18,16 @@ public class RGGInitializer implements Control {
      */
     private static final String PAR_PROT = "protocol";
     
-    protected static final String PAR_DENSITY = "density";
+    private static final String PAR_DENSITY = "density";
 
     // ------------------------------------------------------------------------
     // Fields
     // ------------------------------------------------------------------------
 
     /** Protocol identifier, obtained from config property {@link #PAR_PROT}. */
-    private final int pid;
+    protected final int pid;
     
-    protected double density;  // float ?
+    protected double density;
 
     // ------------------------------------------------------------------------
     // Constructor
@@ -41,7 +42,7 @@ public class RGGInitializer implements Control {
      */
     public RGGInitializer(String prefix) {
         pid = Configuration.getPid(prefix + "." + PAR_PROT);
-        density = (Configuration.getDouble(prefix + "." + PAR_DENSITY));
+        density = Configuration.getDouble(prefix + "." + PAR_DENSITY);
     }
 
     // ------------------------------------------------------------------------

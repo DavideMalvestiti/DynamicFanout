@@ -16,7 +16,6 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
     // Fields
     // ------------------------------------------------------------------------
 	
-	
 	/* 0 Standby
 	 * 1 Scanning
 	 * 2 Initiating
@@ -163,9 +162,9 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 				
 				messages.put( con.idmsg, con.msg );
 				
-				
 				battery = battery - 3;
 				if (battery < 0) battery = 0;
+				
 				
 				// unlock node
 				this.busy = false;
@@ -184,6 +183,7 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 			// unlock node
 			this.busy = false;
 			
+			
 			receiver = -1;
 			
 			// ae = 0  tx++
@@ -200,7 +200,7 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 			TimerIdmsg tm = (TimerIdmsg)event;
 			Cookie cookie = tm.cookie;
 			
-			if ( tm.me == timervalid ){
+			if ( tm.me == timervalid && bleState != 0 ){
 				if ( (cookie.ae < cookie.advertiseLimit)  &&  (cookie.tx < cookie.dynamicFanout)  ){
 					
 					
