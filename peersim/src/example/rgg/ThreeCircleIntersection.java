@@ -1,26 +1,25 @@
 package example.rgg;
 
-import java.awt.geom.Point2D;
+import peersim.core.Node;
 
-/**
- * @author Mago
- *
- */
+
 public class ThreeCircleIntersection {
 	
 	
-	public ThreeCircleIntersection() {
-		
-		System.out.println("INTERSECTION Circle1 AND Circle2 AND Circle3: (" +   this.calculateThreeCircleIntersection(2.0, 2.0, 2.0,   4.0, 4.0, 2.0,   6.0, 2.0, 2.0)   + ")");
+	private ThreeCircleIntersection() {
 	}
 	
 	
-	private Point2D.Double  calculateThreeCircleIntersection(double x0, double y0, double r0,
-			double x1, double y1, double r1,
-			double x2, double y2, double r2) {
+	public static String  calculateThreeCircleIntersection( 
+			RGGCoordinates p0, double r0,
+			RGGCoordinates p1, double r1,
+			RGGCoordinates p2, double r2) {
 		
 		
 		double a, dx, dy, d, h, rx, ry, point2_x, point2_y;
+		double x0 = p0.getX(); double y0 = p0.getY();
+		double x1 = p1.getX(); double y1 = p1.getY();
+		double x2 = p2.getX(); double y2 = p2.getY();
 		
 		/* dx and dy are the vertical and horizontal distances between
 		* the circle centers.
@@ -81,15 +80,48 @@ public class ThreeCircleIntersection {
 		dy = intersectionPoint2_y - y2;
 		double d2 = Math.sqrt((dy*dy) + (dx*dx));
 		
+		
 		if (Math.abs(d1 - r2) < 0.000001) {
-			return new Point2D.Double( Math.round(intersectionPoint1_x * 100)/100 , Math.round(intersectionPoint1_y * 100)/100 );
+			
+			return ( intersectionPoint1_x )+"-"+( intersectionPoint1_y );
+			
 		} else if (Math.abs(d2 - r2) < 0.000001) {
-			return new Point2D.Double( Math.round(intersectionPoint2_x * 100)/100 , Math.round(intersectionPoint2_y * 100)/100 );
+			
+			return ( intersectionPoint2_x )+"-"+( intersectionPoint2_y );
+			
 		} else {
 			return null;
 		}
 	
 	}
-
+	
+	
+	/**
+     * Utility function: returns the Euclidean distance based on the x,y
+     * coordinates of a node. A {@link RuntimeException} is raised if a not
+     * initialized coordinate is found.
+     * 
+     * @param new_node
+     *            the node to insert in the topology.
+     * @param old_node
+     *            a node already part of the topology.
+     * @param coordPid
+     *            identifier index.
+     * @return the distance value.
+     */
+    public static double distance(Node new_node, Node old_node, int coordPid) {
+        double x1 = ((RGGCoordinates) new_node.getProtocol(coordPid))
+                .getX();
+        double x2 = ((RGGCoordinates) old_node.getProtocol(coordPid))
+                .getX();
+        double y1 = ((RGGCoordinates) new_node.getProtocol(coordPid))
+                .getY();
+        double y2 = ((RGGCoordinates) old_node.getProtocol(coordPid))
+                .getY();
+        if (x1 == -1 || x2 == -1 || y1 == -1 || y2 == -1)
+            throw new RuntimeException(
+                    "Found un-initialized coordinate. Use e.g., InetInitializer class in the config file.");
+        return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+    }
 
 }
