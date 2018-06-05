@@ -6,6 +6,7 @@ SIZE 10
 random.seed 1234567890
 network.size SIZE
 simulation.endtime 75000
+simulation.experiments 20
 
 ################### protocols ===========================
 
@@ -44,3 +45,7 @@ control.start.at 5
 control.obs example.rgg.BLEObserver
 control.obs.protocol ble
 control.obs.step 5000
+
+control.st example.rgg.BLEReport
+control.st.protocol ble
+control.st.at 70000

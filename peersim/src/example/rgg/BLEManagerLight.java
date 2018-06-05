@@ -101,9 +101,13 @@ public class BLEManagerLight extends BLEManager {
 				
 				messages.put( con.idmsg, con.msg );
 				
+				if (timemsg1 == -1) {
+					timemsg1 = CommonState.getTime();
+				}
 				
 				battery = battery - 3;
 				if (battery < 0) battery = 0;
+				
 				
 				// unlock node
 				this.busy = false;
@@ -132,7 +136,11 @@ public class BLEManagerLight extends BLEManager {
 		
 		messages.put( newid, newmsg );
 		
-		// battery*
+		if (timemsg1 == -1) {
+			timemsg1 = CommonState.getTime();
+		}
+		
+		
 		bleState = 3;
 		this.doAdvertising(newid, node, pid, cookie);
 	}

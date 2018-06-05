@@ -32,7 +32,9 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 	
 	protected Map<String, String> messages;  // idmsg -> msg
 	protected int timervalid;
+	
 	protected int receiver = -1;
+	protected long timemsg1 = -1;
 	
 	
 	//--------------------------------------------------------------------------
@@ -161,6 +163,10 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 				
 				
 				messages.put( con.idmsg, con.msg );
+				
+				if (timemsg1 == -1) {
+					timemsg1 = CommonState.getTime();
+				}
 				
 				battery = battery - 3;
 				if (battery < 0) battery = 0;
@@ -297,7 +303,11 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 		
 		messages.put( newid, newmsg );
 		
-		// battery*
+		if (timemsg1 == -1) {
+			timemsg1 = CommonState.getTime();
+		}
+		
+		
 		bleState = 3;
 		this.sendMessages(newid, node, pid);
 	}
@@ -319,6 +329,14 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 			return Network.get(receiver);
 		}
 		return null;
+	}
+	
+	
+	/**
+	 * @return the timemsg
+	 */
+	public long getTimemsg() {
+		return this.timemsg1;
 	}
 
 }
