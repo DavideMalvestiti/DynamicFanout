@@ -2,6 +2,6 @@
 peersim/script/*
 
 # exception to the rule
-!peersim/script/base.dat 
 !peersim/script/script1.txt 
 !peersim/script/script1.gp 
+!peersim/script/script2.txt 
