@@ -137,7 +137,7 @@ public class BLEManager implements CDProtocol, EDProtocol, Protocol, BLE {
 				// delay calculation
 				int sizex = Integer.valueOf( messages.get( rq.idmsg ).substring(0, 1) );
 				int sizemsg = (int) Math.pow(10, sizex);
-				long delay = ( sizemsg / 125 ) * 1000 + 3;  // 125 Kbyte/s
+				long delay = ( sizemsg / 125 ) * 1000 + 3 + 4200;  // 125 Kbyte/s
 				
 				
 				EDSimulator.add(
