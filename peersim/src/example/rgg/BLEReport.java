@@ -74,7 +74,7 @@ public class BLEReport implements Control {
 			System.out.println("Writing to file " + fname);
 			PrintStream pstr = new PrintStream(fos);
 			
-			pstr.println(max + " " + nomsg);
+			pstr.println( ((double)max/1000) + "\t" + nomsg);
 			
 			fos.close();
 			

@@ -1,11 +1,12 @@
 # network size
-SIZE 100
-
-
+SIZE 1000
+RADIUS 50
+DENSITY 0.02
 
 random.seed 1234567890
 network.size SIZE
-simulation.endtime 75000
+simulation.endtime 850000
+simulation.experiments 20
 
 ################### protocols ===========================
 
@@ -20,46 +21,31 @@ protocol.ble.transport tr
 
 ################### initialization ======================
 
-init.0 example.rgg.RGGInitializerCity
+init.0 example.rgg.RGGInitializer
 init.0.protocol coord
-init.0.density 0.0005
+init.0.density DENSITY
 
 init.1 example.rgg.WireRGGTopology
 init.1.undir
 init.1.protocol link 
 init.1.coord_protocol coord
-init.1.radius 50
+init.1.radius RADIUS
 
 init.sch CDScheduler
 init.sch.protocol ble
 
 ################ control ==============================
 
-
-control.uno example.rgg.RGGCityNodeMoving
-control.uno.protocol coord
-control.uno.density 0.0005
-control.uno.from 6
-control.uno.step 1000
-
-control.due example.rgg.WireRGGTopology
-control.due.undir
-control.due.protocol link 
-control.due.coord_protocol coord
-control.due.radius 50
-control.due.from 7
-control.due.step 1000
-
-control.bs example.rgg.InetObserver
-control.bs.protocol link
-control.bs.coord_protocol coord
-control.bs.file_base base
-control.bs.from 5
-control.bs.step 1000
-
-
 control.start example.rgg.GenerateMessage
 control.start.protocol ble
 control.start.node 1
 control.start.size 3
-control.start.at 1
+control.start.at 1000
+
+control.obs example.rgg.BLEObserver
+control.obs.protocol ble
+control.obs.step 5000
+
+control.st example.rgg.BLEReport
+control.st.protocol ble
+control.st.at 840000
