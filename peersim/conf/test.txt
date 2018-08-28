@@ -1,5 +1,5 @@
 # network size
-SIZE 1000
+SIZE 5
 RADIUS 50
 DENSITY 0.02
 
@@ -11,21 +11,21 @@ simulation.experiments 20
 ################### protocols ===========================
 
 protocol.link IdleProtocol
-protocol.coord example.rgg.RGGCoordinates
+protocol.coord rgg.RGGCoordinates
 protocol.tr peersim.transport.E2ETransport
 
-protocol.ble example.rgg.BLEManager
+protocol.ble managers.BLEManagerVer4
 protocol.ble.linkable link
 protocol.ble.step 30000
 protocol.ble.transport tr
 
 ################### initialization ======================
 
-init.0 example.rgg.RGGInitializer
+init.0 rgg.RGGInitializer
 init.0.protocol coord
 init.0.density DENSITY
 
-init.1 example.rgg.WireRGGTopology
+init.1 rgg.WireRGGTopology
 init.1.undir
 init.1.protocol link 
 init.1.coord_protocol coord
@@ -36,16 +36,26 @@ init.sch.protocol ble
 
 ################ control ==============================
 
-control.start example.rgg.GenerateMessage
+control.start controls.GenerateMessage
 control.start.protocol ble
 control.start.node 1
 control.start.size 3
 control.start.at 1000
 
-control.obs example.rgg.BLEObserver
-control.obs.protocol ble
-control.obs.step 5000
 
-control.st example.rgg.BLEReport
+control.mone controls.GenerateMessage
+control.mone.protocol ble
+control.mone.node 4
+control.mone.size 3
+control.mone.at 2000
+
+control.pull controls.BLEPull
+control.pull.protocol ble
+control.pull.step 1000
+
+
+control.st controls.BLEReport
 control.st.protocol ble
+control.st.density DENSITY
+control.st.radius RADIUS
 control.st.at 840000
