@@ -1,0 +1,18 @@
+cd 'C:\Users\Mago\workspace\DynamicFanout\peersim\script'
+set size ratio -1
+set size square
+
+set style line 1 lc rgb '#0060ad' lt 1 lw 2.5 pt 1
+
+
+do for [i=0:9] {
+plot 'base0000000'.i.'.dat' notitle with linespoints ls 1
+
+pause 1
+}
+
+do for [i=10:74] {
+plot 'base000000'.i.'.dat' notitle with linespoints ls 1
+
+pause 1
+}
