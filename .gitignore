@@ -1,0 +1,8 @@
+# exclude everything
+peersim/script/*
+peersim/bin/*
+
+# exception to the rule
+!peersim/script/script1.txt 
+!peersim/script/script1.gp 
+!peersim/script/script2.txt
