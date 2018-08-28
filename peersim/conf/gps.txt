@@ -1,47 +1,46 @@
 # network size
 SIZE 80
-
-
+RADIUS 50
+DENSITY 0.0005
 
 random.seed 1234567890
 network.size SIZE
-simulation.endtime 75000
+simulation.endtime 850000
 
 ################### protocols ===========================
 
 protocol.link IdleProtocol
-protocol.coord example.rgg.RGGCoordinates
+protocol.coord rgg.RGGCoordinates
 protocol.tr peersim.transport.E2ETransport
 
-protocol.gps example.rgg.GPSManager
+protocol.gps managers.GPSManager
 protocol.gps.linkable link
 protocol.gps.transport tr
 protocol.gps.coord_protocol coord
-protocol.gps.step 500
+protocol.gps.step 5000
 
 ################### initialization ======================
 
-init.0 example.rgg.RGGInitializerCity
+init.0 rgg.RGGInitializer
 init.0.protocol coord
-init.0.density 0.0005
-init.0.center
+init.0.density DENSITY
 
-init.1 example.rgg.WireRGGTopology
+init.1 rgg.WireRGGTopology
 init.1.undir
 init.1.protocol link 
 init.1.coord_protocol coord
-init.1.radius 50
+init.1.radius RADIUS
 
 init.sch CDScheduler
 init.sch.protocol gps
 
 ################ control ==============================
 
-control.start example.rgg.GPStarter
+control.start controls.GPStarter
 control.start.protocol gps
 control.start.nlost 0.40
 control.start.at 5
 
-control.obs example.rgg.GPSObserver
+control.obs observers.GPSObserver
 control.obs.protocol gps
-control.obs.at 70000
+control.obs.at 840000

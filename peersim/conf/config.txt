@@ -1,53 +1,53 @@
 # network size
 SIZE 10
-
-
+RADIUS 50
+DENSITY 0.02
 
 random.seed 1234567890
 network.size SIZE
-simulation.endtime 75000
+simulation.endtime 85000
 
 ################### protocols ===========================
 
 protocol.link IdleProtocol
-protocol.coord example.rgg.RGGCoordinates
+protocol.coord rgg.RGGCoordinates
 protocol.tr peersim.transport.E2ETransport
 
-protocol.ble example.rgg.BLEManager
+protocol.ble managers.BLEManager
 protocol.ble.linkable link
 protocol.ble.step 30000
 protocol.ble.transport tr
 
 ################### initialization ======================
 
-init.0 example.rgg.RGGInitializer
+init.0 rgg.RGGInitializer
 init.0.protocol coord
-init.0.density 0.0005
+init.0.density DENSITY
 
-init.1 example.rgg.WireRGGTopology
+init.1 rgg.WireRGGTopology
 init.1.undir
 init.1.protocol link 
 init.1.coord_protocol coord
-init.1.radius 50
+init.1.radius RADIUS
 
 init.sch CDScheduler
 init.sch.protocol ble
 
 ################ control ==============================
 
-control.start example.rgg.GenerateMessage
+control.start controls.GenerateMessage
 control.start.protocol ble
 control.start.node 1
 control.start.size 3
-control.start.at 5
+control.start.at 1000
 
-control.bs example.rgg.InetObserver
+control.bs observers.InetObserver
 control.bs.protocol link
 control.bs.coord_protocol coord
 control.bs.file_base base
 control.bs.at 5
 
-control.st example.rgg.BLEStamp
+control.st controls.BLEStamp
 control.st.protocol link
 control.st.coord_protocol coord
 control.st.pid ble
