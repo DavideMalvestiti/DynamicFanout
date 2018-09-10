@@ -1,11 +1,11 @@
 # network size
-SIZE 10
+SIZE 100
 RADIUS 50
-DENSITY 0.02
+DENSITY 0.0005
 
 random.seed 1234567890
 network.size SIZE
-simulation.endtime 85000
+simulation.endtime 130000
 
 ################### protocols ===========================
 
@@ -20,7 +20,7 @@ protocol.ble.transport tr
 
 ################### initialization ======================
 
-init.0 rgg.RGGInitializer
+init.0 rgg.RGGInitializerCity
 init.0.protocol coord
 init.0.density DENSITY
 

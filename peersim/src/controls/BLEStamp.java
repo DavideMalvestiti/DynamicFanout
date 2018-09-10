@@ -68,6 +68,7 @@ public class BLEStamp extends GraphObserver {
     // ------------------------------------------------------------------------
     // Constructor
     // ------------------------------------------------------------------------
+    
     /**
      * Standard constructor that reads the configuration parameters. Invoked by
      * the simulation engine.

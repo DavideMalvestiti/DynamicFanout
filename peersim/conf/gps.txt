@@ -1,11 +1,11 @@
 # network size
-SIZE 80
+SIZE 100
 RADIUS 50
 DENSITY 0.0005
 
 random.seed 1234567890
 network.size SIZE
-simulation.endtime 850000
+simulation.endtime 130000
 
 ################### protocols ===========================
 
@@ -21,7 +21,7 @@ protocol.gps.step 5000
 
 ################### initialization ======================
 
-init.0 rgg.RGGInitializer
+init.0 rgg.RGGInitializerCity
 init.0.protocol coord
 init.0.density DENSITY
 
@@ -43,4 +43,17 @@ control.start.at 5
 
 control.obs observers.GPSObserver
 control.obs.protocol gps
-control.obs.at 840000
+control.obs.at 120000
+
+
+control.bs observers.InetObserver
+control.bs.protocol link
+control.bs.coord_protocol coord
+control.bs.file_base base
+control.bs.at 5
+
+control.st controls.BLEStamp
+control.st.protocol link
+control.st.coord_protocol coord
+control.st.pid gps
+control.st.step 2000

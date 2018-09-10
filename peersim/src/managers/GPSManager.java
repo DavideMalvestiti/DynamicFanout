@@ -15,6 +15,10 @@ public class GPSManager extends BLEManager {
 	// ------------------------------------------------------------------------
     // Parameters
     // ------------------------------------------------------------------------
+	/* 0 Safe
+	 * 1 Lost
+	 * 2 Found
+	 */
 	
     /**
      * The coordinate protocol to look at.
@@ -50,6 +54,7 @@ public class GPSManager extends BLEManager {
 		super(prefix);
 		coordPid = Configuration.getPid(prefix + "." + PAR_COORDINATES_PROT);
 		cookie = new Cookie(0,0,0,0);
+		bleState = 0;
 		
 	}
 	
@@ -182,6 +187,7 @@ public class GPSManager extends BLEManager {
 					myp.setY( Double.parseDouble( pts[1] ) );
 					
 					
+					bleState = 2;
 					System.out.println( "node " + node.getIndex() + " found" );
 					
 					RGGCoordinates mypos = ((RGGCoordinates)node.getProtocol(coordPid));
@@ -202,6 +208,7 @@ public class GPSManager extends BLEManager {
 			
 			// unlock node
 			this.busy = false;
+			
 			
 			receiver = -1;
 		}
@@ -245,6 +252,7 @@ public class GPSManager extends BLEManager {
 		nodes.clear();
 		pos.clear();
 		distances.clear();
+		bleState = 1;
 		lost = true;
 		found = false;
 	}

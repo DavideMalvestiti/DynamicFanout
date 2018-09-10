@@ -1,5 +1,5 @@
 # network size
-SIZE 5
+SIZE 50
 RADIUS 50
 DENSITY 0.02
 
@@ -42,16 +42,6 @@ control.start.node 1
 control.start.size 3
 control.start.at 1000
 
-
-control.mone controls.GenerateMessage
-control.mone.protocol ble
-control.mone.node 4
-control.mone.size 3
-control.mone.at 2000
-
-control.pull controls.BLEPull
-control.pull.protocol ble
-control.pull.step 1000
 
 
 control.st controls.BLEReport
