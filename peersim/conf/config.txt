@@ -41,6 +41,7 @@ control.start.node 1
 control.start.size 3
 control.start.at 1000
 
+
 control.bs observers.InetObserver
 control.bs.protocol link
 control.bs.coord_protocol coord
